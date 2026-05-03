@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant U as User
+    participant CTX as ContextMenu
+    participant WV as Edit Webview
+    participant FS as FileSystem
+    participant CL as CodeLens
+
+    U->>U: コード範囲を選択
+    U->>CTX: 右クリック → Add Block
+    CTX->>WV: 編集パネルを開く（行範囲プリセット）
+    U->>WV: ラベル・解説・色を入力
+    U->>WV: 👁 プレビュー（任意）
+    WV-->>U: 閲覧パネル表示
+    U->>WV: 💾 保存
+    WV->>FS: walks-manual/{relPath}.json 書込
+    FS-->>CL: CodeLens [M] 更新
+    CL-->>U: ブロック表示
+
+    Note over U,CL: 以降 CodeLens クリックで解説閲覧
+
+    U->>CL: [📝 編集] クリック
+    CL->>WV: 編集パネル（既存データ）
+    U->>WV: 修正 → 💾 保存
+    WV->>FS: walks-manual/ 更新

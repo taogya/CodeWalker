@@ -1,0 +1,19 @@
+node_modules/
+out/
+.vscode-test/
+__pycache__/
+venv/
+ref/
+publish/
+
+*.vsix
+.DS_Store
+chat.json
+backup/
+
+# CodeWalker runtime outputs
+.code-walker/
+.code-walker-debug.log
+
+# Flowrunner runtime outputs
+.flowrunner/

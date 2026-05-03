@@ -1,0 +1,23 @@
+graph TB
+    START([Activity Bar: CodeWalker]):::blue
+
+    START --> EXP["Walkthrough Explorer"]:::green
+    START --> UNC["Uncovered Files"]:::green
+    START --> STALE["Stale Queue"]:::amber
+    START --> TARGETS["Batch Targets"]:::purple
+
+    EXP --> EXP_ACT["open / show detail / export / clear cache"]:::neutral
+    UNC --> UNC_ACT["open file"]:::neutral
+    TARGETS --> TARGET_ACT["open entry / open targets.json"]:::neutral
+    STALE --> STALE_OPEN["open / show detail"]:::neutral
+    STALE --> REPAIR["repair"]:::amber
+
+    REPAIR --> AUTO{安全に自動修復できる?}
+    AUTO -->|YES| APPLY["cache 更新 + ハイライト再描画"]:::green
+    AUTO -->|NO| CANDIDATE{候補を提示できる?}
+    CANDIDATE -->|YES| PREVIEW["Repair Preview で選択適用"]:::purple
+    CANDIDATE -->|NO| EDIT["Edit / Import パネルへフォールバック"]:::purple
+
+    APPLY --> REFRESH["Sidebar refresh + stale 解消"]:::green
+    PREVIEW --> REFRESH
+    EDIT --> SAVE["手動保存後に再描画"]:::neutral

@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant U as User
+    participant C as Copilot
+    participant A as analyze
+    participant H as highlight
+    participant D as drilldown
+    participant E as export
+
+    U->>C: codewalker プロンプト選択
+    C->>A: analyze(filePath, symbolName)
+    A-->>C: sourceCode + blocks + cache?
+
+    C->>H: highlight(blocks, annotations, explanations)
+    H-->>C: OK
+    Note over C: チャットで概要説明
+
+    loop 質問ループ
+        C->>D: drilldown()
+        D-->>C: question / finished
+        alt finished
+            C->>E: export(filePath, symbolName, blocks)
+            E-->>C: saved paths
+        else question
+            Note over C: チャットで回答
+        end
+    end

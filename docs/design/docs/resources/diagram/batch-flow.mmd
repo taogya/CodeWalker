@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant U as User
+    participant C as Copilot
+    participant LS as list_symbols
+    participant A as analyze
+    participant H as highlight
+    participant E as export
+
+    U->>C: codewalker-all プロンプト選択
+    C->>LS: list_symbols(path, level)
+    LS-->>C: targets + targets.json 保存
+
+    U->>U: targets.json 編集（任意）
+    C->>LS: list_symbols(fromFile=true)
+    LS-->>C: pending targets
+
+    loop 各ターゲット
+        C->>A: analyze(filePath, symbolName)
+        A-->>C: sourceCode + blocks
+        C->>H: highlight(blocks, annotations, explanations)
+        H-->>C: OK
+        C->>E: export(batchMode=true)
+        E-->>C: saved
+    end
+
+    Note over C: 完了サマリー報告

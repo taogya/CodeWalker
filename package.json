@@ -1,0 +1,718 @@
+{
+  "name": "code-walker",
+  "displayName": "CodeWalker",
+  "description": "Interactive code walk-through with drill-down exploration in VS Code Agent Mode",
+  "version": "1.0.0",
+  "publisher": "Taogya",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/taogya/CodeWalker.git"
+  },
+  "homepage": "https://github.com/taogya/CodeWalker#readme",
+  "bugs": {
+    "url": "https://github.com/taogya/CodeWalker/issues"
+  },
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": [
+    "AI",
+    "Education"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "l10n": "./l10n",
+  "contributes": {
+    "languageModelTools": [
+      {
+        "name": "code_walker_analyze",
+        "displayName": "Analyze Code Structure",
+        "toolReferenceName": "codewalker",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(symbol-function)",
+        "userDescription": "%tool.analyze.userDescription%",
+        "modelDescription": "Analyze a function or class by finding its symbol via the language server and returning the full source code with structural metadata. Use this as the first step of a code walk-through. The result includes sourceCode, range, childSymbols if available, systemContext from .reverse-engineer/ if present, and cachedWalkthrough if a previous walkthrough export exists for this symbol. When cachedWalkthrough is present, you can reuse the previous blocks/annotations/explanations as a starting point in the highlight step — but verify they still match the current source code first.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Workspace-relative path to the file"
+            },
+            "symbolName": {
+              "type": "string",
+              "description": "Function or class name to analyze"
+            },
+            "depth": {
+              "type": "number",
+              "description": "Analysis depth: 1=overview, 2=blocks, 3=lines. Default: 1"
+            },
+            "startLine": {
+              "type": "number",
+              "description": "Optional: 1-based start line to narrow analysis range"
+            },
+            "endLine": {
+              "type": "number",
+              "description": "Optional: 1-based end line to narrow analysis range"
+            }
+          },
+          "required": [
+            "filePath",
+            "symbolName"
+          ]
+        },
+        "tags": [
+          "code-analysis",
+          "code-walker"
+        ]
+      },
+      {
+        "name": "code_walker_drilldown",
+        "displayName": "Ask Question",
+        "toolReferenceName": "codewalker-drilldown",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(list-tree)",
+        "userDescription": "%tool.drilldown.userDescription%",
+        "modelDescription": "Show an interactive QuickPick input for the user to ask a question or finish the walk-through. The user can type free text and press Enter to ask a question, or press ESC to finish. Returns { finished: true } when the user presses ESC, or { question: '...' } with the user's question text. Use this in a loop after explaining blocks so the user can ask follow-up questions. When finished is true, proceed to the summary step.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "Optional prompt message to show in the QuickPick title"
+            }
+          },
+          "required": []
+        },
+        "tags": [
+          "code-analysis",
+          "code-walker"
+        ]
+      },
+      {
+        "name": "code_walker_highlight",
+        "displayName": "Annotate Code",
+        "toolReferenceName": "codewalker-highlight",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(lightbulb)",
+        "userDescription": "%tool.highlight.userDescription%",
+        "modelDescription": "Add block definitions, line-end annotations, and block explanations to the editor. When blocks are provided, they OVERRIDE the mechanical block detection from analyze — use this to define semantically correct blocks. Each block gets color-coded highlighting and a CodeLens label. Annotations appear as inline decorations (like git blame) at the end of code lines. Explanations are stored per block and shown in the CodeLens detail panel. ALWAYS provide blocks to ensure correct block splitting, especially for code without separator comments. ALWAYS provide symbolName so that multiple symbols in the same file can coexist.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Workspace-relative path to the file"
+            },
+            "symbolName": {
+              "type": "string",
+              "description": "Name of the symbol being highlighted (must match the symbol from analyze). Required to support multi-symbol display in the same file."
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "description": "Human-readable block label (e.g. '初期化処理', 'データベース接続')"
+                  },
+                  "startLine": {
+                    "type": "number",
+                    "description": "1-based start line number"
+                  },
+                  "endLine": {
+                    "type": "number",
+                    "description": "1-based end line number"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Brief one-line description of the block"
+                  }
+                },
+                "required": [
+                  "label",
+                  "startLine",
+                  "endLine"
+                ]
+              },
+              "description": "AI-defined logical blocks. Overrides the mechanical block detection from analyze. Each block gets color-coded highlighting and a CodeLens label. ALWAYS provide this for correct block splitting."
+            },
+            "annotations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "line": {
+                    "type": "number",
+                    "description": "1-based line number"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Short annotation text (~40 chars)"
+                  }
+                },
+                "required": [
+                  "line",
+                  "text"
+                ]
+              },
+              "description": "Line-end annotations displayed as inline decorations"
+            },
+            "explanations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "blockIndex": {
+                    "type": "number",
+                    "description": "Block index (0-based, matching the blocks array from analyze result)"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Detailed explanation text for this block (supports Markdown: **bold**, `code`, - lists)"
+                  }
+                },
+                "required": [
+                  "blockIndex",
+                  "text"
+                ]
+              },
+              "description": "Detailed block explanations stored for CodeLens detail panel display"
+            }
+          },
+          "required": [
+            "filePath",
+            "symbolName"
+          ]
+        },
+        "tags": [
+          "editor",
+          "code-walker"
+        ]
+      },
+      {
+        "name": "code_walker_export",
+        "displayName": "Export Walkthrough",
+        "toolReferenceName": "codewalker-export",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(save)",
+        "userDescription": "%tool.export.userDescription%",
+        "modelDescription": "Save the walkthrough result (overview, blocks, annotations, explanations) as JSON and/or Markdown in .code-walker/walks-auto/. In normal mode, the user will be shown a format picker (JSON, Markdown, Both, Cancel). When batchMode is true, the confirmation dialog is skipped and JSON is saved automatically — use this for codewalker-all batch processing. JSON is machine-readable and reusable as cache. Markdown is human-readable documentation.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Workspace-relative path to the analyzed file"
+            },
+            "symbolName": {
+              "type": "string",
+              "description": "Name of the analyzed symbol (function or class)"
+            },
+            "overview": {
+              "type": "string",
+              "description": "Overview text of the walkthrough (what the function/class does)"
+            },
+            "blocks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "description": "Block label"
+                  },
+                  "startLine": {
+                    "type": "number",
+                    "description": "1-based start line"
+                  },
+                  "endLine": {
+                    "type": "number",
+                    "description": "1-based end line"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Brief one-line description"
+                  },
+                  "explanation": {
+                    "type": "string",
+                    "description": "Detailed explanation (Markdown)"
+                  },
+                  "annotations": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "line": {
+                          "type": "number"
+                        },
+                        "text": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "description": "Line annotations for this block"
+                  }
+                },
+                "required": [
+                  "label",
+                  "startLine",
+                  "endLine"
+                ]
+              },
+              "description": "All blocks with their explanations and annotations"
+            },
+            "batchMode": {
+              "type": "boolean",
+              "description": "When true, skip user confirmation and auto-save as JSON (for codewalker-all batch processing)"
+            }
+          },
+          "required": [
+            "filePath",
+            "symbolName",
+            "overview",
+            "blocks"
+          ]
+        },
+        "tags": [
+          "export",
+          "code-walker"
+        ]
+      },
+      {
+        "name": "code_walker_find_symbol",
+        "displayName": "Find Symbol",
+        "toolReferenceName": "codewalker-find-symbol",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(search)",
+        "userDescription": "%tool.findSymbol.userDescription%",
+        "modelDescription": "Search for symbol definitions (functions, classes, methods, variables) across the entire workspace by name. Returns an array of matches with filePath, line number, symbol kind, and container name. Use this to resolve cross-file references — when explaining code that calls external functions or uses imported classes, use this tool to find where they are defined. The results can then be used with code_walker_analyze to start a new walkthrough on the referenced symbol.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Symbol name to search for (e.g. function name, class name)"
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of results to return (default: 10)"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        },
+        "tags": [
+          "code-analysis",
+          "code-walker"
+        ]
+      },
+      {
+        "name": "code_walker_list_symbols",
+        "displayName": "List Symbols",
+        "toolReferenceName": "codewalker-list-symbols",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(list-unordered)",
+        "userDescription": "%tool.listSymbols.userDescription%",
+        "modelDescription": "List all function/class/method symbols in a file or folder. Recursively scans directories, filters by extension whitelist, and returns a targets array with filePath, symbolName, kind, line, and status='pending'. Skipped files (empty, binary, unsupported extension, generated) are recorded with reasons. Use the 'level' parameter to control granularity: 'function' (every function/method individually), 'class' (class units + top-level functions, default), or 'file' (entire file as one target). Results are automatically saved to .code-walker/targets.json and opened in the editor. Users can edit targets.json to change status ('pending'→'skip') or set per-target level. Use 'fromFile' to reload the edited file. This tool is designed for codewalker-all batch processing.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Workspace-relative path to a file or folder to scan"
+            },
+            "extensions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "File extensions to include (e.g. ['.py', '.ts']). Default: all supported extensions"
+            },
+            "level": {
+              "type": "string",
+              "enum": [
+                "function",
+                "class",
+                "file"
+              ],
+              "description": "Symbol granularity: 'function' (all functions/methods), 'class' (class units + top-level functions, default), 'file' (whole file)"
+            },
+            "fromFile": {
+              "type": "string",
+              "description": "Path to an existing targets.json to reload (e.g. '.code-walker/targets.json'). When provided, reads from file instead of scanning, returning only 'pending' targets."
+            }
+          },
+          "required": [
+            "path"
+          ]
+        },
+        "tags": [
+          "code-analysis",
+          "code-walker"
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "codeWalker.clearHighlights",
+        "title": "CodeWalker: Clear All Highlights"
+      },
+      {
+        "command": "codeWalker.showBlockDetail",
+        "title": "CodeWalker: Show Block Detail"
+      },
+      {
+        "command": "codeWalker.toggleAnnotations",
+        "title": "CodeWalker: Toggle Annotations"
+      },
+      {
+        "command": "codeWalker.clearCache",
+        "title": "CodeWalker: Clear Cache"
+      },
+      {
+        "command": "codeWalker.addBlock",
+        "title": "CodeWalker: Add Block (Manual)"
+      },
+      {
+        "command": "codeWalker.editBlock",
+        "title": "CodeWalker: Edit Block"
+      },
+      {
+        "command": "codeWalker.deleteBlock",
+        "title": "CodeWalker: Delete Block"
+      },
+      {
+        "command": "codeWalker.repairWalkthrough",
+        "title": "%command.repairWalkthrough.title%"
+      },
+      {
+        "command": "codeWalker.setViewMode",
+        "title": "CodeWalker: Set View Mode (Both / Manual / Auto)"
+      },
+      {
+        "command": "codeWalker.compareWalkthroughs",
+        "title": "CodeWalker: Compare Walkthroughs"
+      },
+      {
+        "command": "codeWalker.openSymbolGraph",
+        "title": "%command.openSymbolGraph.title%",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "codeWalker.openTimeline",
+        "title": "%command.openTimeline.title%",
+        "icon": "$(history)"
+      },
+      {
+        "command": "codeWalker.sidebar.refresh",
+        "title": "%command.sidebarRefresh.title%",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "codeWalker.sidebar.openNode",
+        "title": "%command.sidebarOpenNode.title%"
+      },
+      {
+        "command": "codeWalker.sidebar.showNodeDetail",
+        "title": "%command.sidebarShowNodeDetail.title%"
+      },
+      {
+        "command": "codeWalker.sidebar.openTargetsFile",
+        "title": "%command.sidebarOpenTargetsFile.title%",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "codeWalker.sidebar.exportNode",
+        "title": "%command.sidebarExportNode.title%",
+        "icon": "$(save-as)"
+      },
+      {
+        "command": "codeWalker.sidebar.clearNodeCache",
+        "title": "%command.sidebarClearNodeCache.title%",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "codeWalker.sidebar.repairNode",
+        "title": "%command.sidebarRepairNode.title%",
+        "icon": "$(wrench)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codeWalkerSidebar",
+          "title": "%viewContainer.codeWalkerSidebar.title%",
+          "icon": "media/codewalker-sidebar.svg"
+        }
+      ]
+    },
+    "views": {
+      "codeWalkerSidebar": [
+        {
+          "id": "codeWalker.walkthroughExplorer",
+          "name": "%view.walkthroughExplorer.name%"
+        },
+        {
+          "id": "codeWalker.uncoveredFiles",
+          "name": "%view.uncoveredFiles.name%"
+        },
+        {
+          "id": "codeWalker.staleQueue",
+          "name": "%view.staleQueue.name%"
+        },
+        {
+          "id": "codeWalker.batchTargets",
+          "name": "%view.batchTargets.name%"
+        }
+      ]
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "codeWalker.addBlock",
+          "group": "codeWalker@1",
+          "when": "editorHasSelection"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "codeWalker.addBlock",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "codeWalker.editBlock",
+          "when": "false"
+        },
+        {
+          "command": "codeWalker.deleteBlock",
+          "when": "false"
+        },
+        {
+          "command": "codeWalker.repairWalkthrough",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "codeWalker.openSymbolGraph"
+        },
+        {
+          "command": "codeWalker.openTimeline"
+        },
+        {
+          "command": "codeWalker.sidebar.openNode",
+          "when": "false"
+        },
+        {
+          "command": "codeWalker.sidebar.showNodeDetail",
+          "when": "false"
+        },
+        {
+          "command": "codeWalker.sidebar.exportNode",
+          "when": "false"
+        },
+        {
+          "command": "codeWalker.sidebar.clearNodeCache",
+          "when": "false"
+        },
+        {
+          "command": "codeWalker.sidebar.repairNode",
+          "when": "false"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "codeWalker.sidebar.refresh",
+          "when": "view == codeWalker.walkthroughExplorer || view == codeWalker.uncoveredFiles || view == codeWalker.staleQueue || view == codeWalker.batchTargets",
+          "group": "navigation"
+        },
+        {
+          "command": "codeWalker.sidebar.openTargetsFile",
+          "when": "view == codeWalker.batchTargets",
+          "group": "navigation@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "codeWalker.sidebar.openNode",
+          "when": "viewItem == codeWalkerSidebar.file || viewItem == codeWalkerSidebar.fileStale || viewItem == codeWalkerSidebar.symbol || viewItem == codeWalkerSidebar.symbolStale || viewItem == codeWalkerSidebar.target || viewItem == codeWalkerSidebar.uncoveredFile",
+          "group": "inline"
+        },
+        {
+          "command": "codeWalker.sidebar.showNodeDetail",
+          "when": "viewItem == codeWalkerSidebar.block || viewItem == codeWalkerSidebar.blockStale || viewItem == codeWalkerSidebar.symbol || viewItem == codeWalkerSidebar.symbolStale",
+          "group": "inline@1"
+        },
+        {
+          "command": "codeWalker.sidebar.exportNode",
+          "when": "viewItem == codeWalkerSidebar.symbol || viewItem == codeWalkerSidebar.symbolStale || viewItem == codeWalkerSidebar.block || viewItem == codeWalkerSidebar.blockStale",
+          "group": "navigation@1"
+        },
+        {
+          "command": "codeWalker.sidebar.clearNodeCache",
+          "when": "viewItem == codeWalkerSidebar.file || viewItem == codeWalkerSidebar.fileStale || viewItem == codeWalkerSidebar.symbol || viewItem == codeWalkerSidebar.symbolStale",
+          "group": "navigation@2"
+        },
+        {
+          "command": "codeWalker.sidebar.repairNode",
+          "when": "viewItem == codeWalkerSidebar.fileStale || viewItem == codeWalkerSidebar.symbolStale || viewItem == codeWalkerSidebar.blockStale",
+          "group": "navigation@3"
+        },
+        {
+          "command": "codeWalker.sidebar.openTargetsFile",
+          "when": "view == codeWalker.batchTargets",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "CodeWalker",
+      "properties": {
+        "codeWalker.enableDebugLog": {
+          "type": "boolean",
+          "default": false,
+          "description": "%config.enableDebugLog.description%"
+        },
+        "codeWalker.enableLineTracking": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.enableLineTracking.description%"
+        },
+        "codeWalker.notificationTimeoutSeconds": {
+          "type": "number",
+          "default": 3,
+          "minimum": 0,
+          "description": "%config.notificationTimeoutSeconds.description%"
+        },
+        "codeWalker.templateLabels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "Initialization",
+            "Validation",
+            "Main Logic",
+            "Error Handling",
+            "Cleanup",
+            "Helper"
+          ],
+          "description": "%config.templateLabels.description%"
+        },
+        "codeWalker.defaultColor": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 5,
+          "description": "%config.defaultColor.description%"
+        },
+        "codeWalker.annotationStyle": {
+          "type": "string",
+          "default": "italic",
+          "enum": [
+            "italic",
+            "normal"
+          ],
+          "description": "%config.annotationStyle.description%"
+        },
+        "codeWalker.viewMode": {
+          "type": "string",
+          "default": "both",
+          "enum": [
+            "both",
+            "manual-only",
+            "auto-only"
+          ],
+          "enumDescriptions": [
+            "%config.viewMode.both%",
+            "%config.viewMode.manualOnly%",
+            "%config.viewMode.autoOnly%"
+          ],
+          "description": "%config.viewMode.description%"
+        },
+        "codeWalker.skipPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "node_modules",
+            "\\.min\\.(js|css)$",
+            "/dist/",
+            "/build/",
+            "/out/",
+            "__pycache__",
+            "\\.pyc$",
+            "\\.d\\.ts$",
+            "\\.generated\\.",
+            "\\.g\\.",
+            "/vendor/",
+            "/\\.git/",
+            "/\\.vscode/",
+            "/\\.code-walker/"
+          ],
+          "description": "%config.skipPatterns.description%"
+        },
+        "codeWalker.extensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".py",
+            ".ts",
+            ".tsx",
+            ".js",
+            ".jsx",
+            ".java",
+            ".go",
+            ".rs",
+            ".cs",
+            ".rb",
+            ".php",
+            ".swift",
+            ".kt",
+            ".scala",
+            ".c",
+            ".cpp",
+            ".h",
+            ".hpp"
+          ],
+          "description": "%config.extensions.description%"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./ --noEmit && node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch",
+    "typecheck": "tsc -p ./ --noEmit",
+    "lint": "eslint src --ext ts",
+    "package": "npm run compile -- --production && vsce package",
+    "pretest:integration": "node esbuild.config.mjs && tsc -p src/test/tsconfig.test.json",
+    "test:integration": "node out/test/src/test/integration/runTest.js",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test": "npm run test:unit && npm run pretest:integration && npm run test:integration",
+    "analyze-log": "node scripts/analyze-log.mjs"
+  },
+  "devDependencies": {
+    "@types/glob": "^9.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.99.0",
+    "@vscode/test-electron": "^2.3.0",
+    "@vscode/vsce": "^2.20.0",
+    "esbuild": "^0.27.3",
+    "glob": "^13.0.6",
+    "mocha": "^11.7.5",
+    "typescript": "^5.4.0",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "@vscode/l10n": "^0.0.18"
+  }
+}

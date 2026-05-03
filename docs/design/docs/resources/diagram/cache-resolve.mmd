@@ -1,0 +1,42 @@
+graph TB
+    START([restoreCache / 表示要求]):::blue
+
+    START --> M{walks-manual に<br/>該当シンボルあり?}
+    START --> A{walks-auto に<br/>該当シンボルあり?}
+    M -->|YES| M_HASH{Manual blockHash 一致?}
+    M -->|NO| MERGE
+    A -->|YES| A_HASH{blockHash 一致?}
+    A -->|NO| MERGE
+
+    M_HASH -->|YES| SHOW_M["Manual 候補 [M]"]:::green
+    A_HASH -->|YES| SHOW_A["Auto 候補 [A]"]:::green
+
+    M_HASH -->|NO| STALE_M["Manual 候補 [M] ⚠"]:::amber
+    A_HASH -->|NO| STALE_A["Auto 候補 [A] ⚠"]:::amber
+
+    SHOW_M --> MERGE["Manual / Auto 候補を統合"]:::neutral
+    STALE_M --> MERGE
+    SHOW_A --> MERGE
+    STALE_A --> MERGE
+    MERGE --> VIEW{ViewMode}
+    VIEW -->|Both| BOTH["Manual + Auto を共存表示"]:::green
+    VIEW -->|Manual Only| MANUAL_ONLY["Manual のみ表示"]:::green
+    VIEW -->|Auto Only| AUTO_ONLY["Auto のみ表示"]:::green
+    VIEW -->|候補なし| NONE["キャッシュなし"]:::pink
+
+    STALE_M --> REPAIR{Repair Walkthrough を起動?}
+    STALE_A --> REPAIR
+    REPAIR -->|YES| SHIFT{定義行シフトで<br/>対象 blockHash 一致?}
+    REPAIR -->|NO| KEEP["stale のまま表示継続"]:::neutral
+
+    SHIFT -->|YES| SHIFT_OK["cache を一括シフト更新"]:::purple
+    SHIFT -->|NO| MATCH{current symbol 内で<br/>blockHash が一意一致?}
+    MATCH -->|YES| MATCH_OK["対象 block だけ再配置更新"]:::purple
+    MATCH -->|NO| PREVIEW{候補を提示できる?}
+    PREVIEW -->|YES| PREVIEW_PANEL["Repair Preview で候補選択"]:::purple
+    PREVIEW -->|NO| FALLBACK["Edit / Import パネルへフォールバック"]:::neutral
+
+    SHIFT_OK --> RESTORE["再描画して stale 解消"]:::green
+    MATCH_OK --> RESTORE
+    PREVIEW_PANEL --> RESTORE
+    FALLBACK --> MANUAL["手動保存後に再描画"]:::neutral

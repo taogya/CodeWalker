@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "module": "Node16",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "outDir": "out",
+    "rootDir": "src",
+    "paths": {
+      "@analysis/*": ["./src/analysis/*"],
+      "@cache/*":    ["./src/cache/*"],
+      "@commands":   ["./src/commands/index"],
+      "@commands/*": ["./src/commands/*"],
+      "@sidebar/*":  ["./src/sidebar/*"],
+      "@tools/*":    ["./src/tools/*"],
+      "@utils/*":    ["./src/utils/*"],
+      "@walker/*":   ["./src/walker/*"]
+    },
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "out", "test", "sample_project"]
+}

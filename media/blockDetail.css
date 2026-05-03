@@ -1,0 +1,203 @@
+/**
+ * blockDetail.css — ブロック詳細パネル固有 CSS
+ */
+
+/* ── ナビゲーションバー ────────────────────────── */
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  background: var(--vscode-editor-background, #1e1e1e);
+  border: 1px solid var(--vscode-panel-border, #333);
+  border-radius: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.nav-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  background: var(--vscode-button-secondaryBackground, #3a3d41);
+  color: var(--vscode-button-secondaryForeground, #ccc);
+  border: 1px solid var(--vscode-panel-border, #555);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.nav-btn:hover:not([disabled]) {
+  background: var(--vscode-button-secondaryHoverBackground, #505357);
+}
+
+.nav-btn[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.nav-select {
+  flex: 1;
+  min-width: 120px;
+  padding: 3px 6px;
+  font-size: 12px;
+  background: var(--vscode-input-background, #3c3c3c);
+  color: var(--vscode-input-foreground, #ccc);
+  border: 1px solid var(--vscode-input-border, #555);
+  border-radius: 3px;
+}
+
+.nav-count {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground, #888);
+  white-space: nowrap;
+}
+
+/* ファイルパスリンク */
+a[data-file] {
+  color: var(--vscode-textLink-foreground, #3794ff);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── ヘッダー ──────────────────────────────────── */
+
+.header {
+  border-left: 4px solid var(--block-color);
+  padding: 8px 16px;
+  margin-bottom: 16px;
+  background: color-mix(in srgb, var(--block-color) 10%, transparent);
+  border-radius: 0 4px 4px 0;
+}
+.header h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.2em;
+  color: var(--block-color);
+}
+.header .meta {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+.description {
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+/* ── セクション ────────────────────────────────── */
+
+.section {
+  margin-bottom: 16px;
+}
+.section h3 {
+  font-size: 0.95em;
+  margin: 12px 0 8px 0;
+  opacity: 0.8;
+}
+
+/* ── 折りたたみ（<details>）──────────────────── */
+
+details.section {
+  margin-bottom: 16px;
+}
+details.section summary {
+  cursor: pointer;
+  list-style: revert;
+  user-select: none;
+}
+details.section summary h3 {
+  display: inline;
+  margin: 0;
+}
+details.section > .code-block {
+  margin-top: 8px;
+}
+
+/* ── ソースコード ──────────────────────────────── */
+
+.code-block {
+  background: var(--vscode-textCodeBlock-background, #2d2d2d);
+  border: 1px solid var(--vscode-panel-border, #444);
+  border-radius: 4px;
+  padding: 12px;
+  overflow-x: auto;
+  font-family: var(--vscode-editor-font-family, 'Menlo', 'Consolas', monospace);
+  font-size: var(--vscode-editor-font-size, 13px);
+  line-height: 1.5;
+  white-space: pre;
+}
+.line-num {
+  color: var(--vscode-editorLineNumber-foreground, #858585);
+  user-select: none;
+  margin-right: 8px;
+}
+
+/* ── 解説 ──────────────────────────────────────── */
+
+.explanation {
+  line-height: 1.7;
+}
+.explanation p {
+  margin: 4px 0;
+}
+.explanation ul {
+  margin: 4px 0 4px 20px;
+  padding: 0;
+}
+.explanation li {
+  margin: 2px 0;
+}
+.explanation code {
+  background: var(--vscode-textCodeBlock-background, #2d2d2d);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.9em;
+}
+.explanation h3,
+.explanation h4,
+.explanation h5 {
+  margin: 12px 0 4px 0;
+  font-size: 0.95em;
+}
+
+.hint {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+/* ── Markdown: コードフェンス ──────────────────── */
+
+.fenced-code {
+  background: var(--vscode-textCodeBlock-background, #2d2d2d);
+  border: 1px solid var(--vscode-panel-border, #444);
+  border-radius: 4px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  font-family: var(--vscode-editor-font-family, 'Menlo', 'Consolas', monospace);
+  font-size: var(--vscode-editor-font-size, 13px);
+  line-height: 1.5;
+  white-space: pre;
+  margin: 8px 0;
+}
+
+/* ── Markdown: ブロック引用 ────────────────────── */
+
+blockquote {
+  border-left: 3px solid var(--vscode-textBlockQuote-border, #555);
+  margin: 8px 0;
+  padding: 4px 12px;
+  background: var(--vscode-textBlockQuote-background, rgba(127, 127, 127, 0.1));
+  opacity: 0.9;
+}
+blockquote p {
+  margin: 2px 0;
+}
+
+/* ── Markdown: 水平線 ─────────────────────────── */
+
+hr {
+  border: none;
+  border-top: 1px solid var(--vscode-panel-border, #444);
+  margin: 12px 0;
+}

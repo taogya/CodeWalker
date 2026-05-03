@@ -1,0 +1,87 @@
+graph TB
+    subgraph Extension["extension.ts (DI 配線 + 登録 + 復元ライフサイクル)"]
+        EP[activate]:::blue
+    end
+
+    subgraph Commands["commands/"]
+        CLH[clearHighlights]:::blue
+        SBD[showBlockDetail]:::blue
+        TA[toggleAnnotations]:::blue
+        CC[clearCache]:::blue
+        AB[addBlock]:::blue
+        EB[editBlock]:::blue
+        DB[deleteBlock]:::blue
+        RW[repairWalkthrough]:::blue
+        VM[setViewMode]:::blue
+        CMP[compareWalkthroughs]:::blue
+        SG[openSymbolGraph]:::blue
+        TL[openTimeline]:::blue
+    end
+
+    subgraph Tools["tools/"]
+        AT[analyzeTool]:::green
+        HT[highlightTool]:::green
+        DT[drilldownTool]:::green
+        ET[exportTool]:::green
+        FST[findSymbolTool]:::green
+        LST[listSymbolsTool]:::green
+    end
+
+    subgraph Sidebar["sidebar/"]
+        SDS[sidebarDataService]:::amber
+        SP[sidebarProviders]:::amber
+        SC[sidebarCommands]:::amber
+        TH[treeHierarchy]:::neutral
+    end
+
+    subgraph Walker["walker/"]
+        BS[blockStore]:::purple
+        HL[highlighter]:::purple
+        CLP[codeLensProvider]:::purple
+        BDP[blockDetailPanel]:::purple
+        BEP[blockEditPanel]:::purple
+        RPP[repairPreviewPanel]:::purple
+        SF[symbolFinder]:::purple
+        ST[state]:::purple
+    end
+
+    subgraph Cache["cache/"]
+        CS[cacheService]:::amber
+        RC[restoreCache]:::amber
+        SNAP[cacheSnapshot]:::amber
+    end
+
+    subgraph Storage[".code-walker/"]
+        WM[walks-manual/]:::pink
+        WA[walks-auto/]:::neutral
+        CFG[config.json]:::neutral
+        TGT[targets.json]:::neutral
+    end
+
+    EP -->|DI| AT & HT & DT & ET & FST & LST
+    EP -->|DI| CLH & SBD & TA & CC & AB & EB & DB & RW & VM & CMP & SG & TL
+    EP -->|DI| CLP & RC & SDS & SP & SC
+
+    AT --> SF & CS
+    HT --> HL & BS
+    ET --> CS
+    LST --> TGT
+    RC --> CS & BS & HL
+    SDS --> CS & BS
+    SP --> SDS & TH
+    SC --> CS & BS & RC & HL & BDP & BEP & RPP
+
+    CLP -->|onDidChange| BS
+    CLH --> BS & HL
+    SBD --> BS & BDP
+    CC --> CS & BS
+    AB --> BEP
+    EB --> CS & BEP
+    DB --> CS & BS & HL
+    RW --> SC & RC & BS
+    CMP --> CS
+    SG --> SDS & BS & CS
+    TL --> BS & CS & RC & SNAP
+
+    BEP --> CS & BS & HL
+    CS --> WM & WA

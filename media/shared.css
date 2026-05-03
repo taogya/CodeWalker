@@ -1,0 +1,98 @@
+/**
+ * shared.css — Webview 共通テーマ CSS
+ *
+ * VS Code テーマ変数を利用し、ライト/ダーク両対応。
+ * blockEditPanel, blockDetailPanel の両方から読み込まれる。
+ */
+
+/* ── リセット + ベース ─────────────────────────── */
+
+body {
+  font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
+  color: var(--vscode-foreground, #ccc);
+  background: var(--vscode-editor-background, #1e1e1e);
+  padding: 16px 20px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── フォーム要素 ──────────────────────────────── */
+
+label {
+  display: block;
+  margin-top: 12px;
+  font-weight: 600;
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--vscode-input-background, #3c3c3c);
+  color: var(--vscode-input-foreground, #ccc);
+  border: 1px solid var(--vscode-input-border, #555);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 0.9em;
+  margin-top: 4px;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ── ボタン ────────────────────────────────────── */
+
+.btn {
+  padding: 6px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--vscode-button-background, #0e639c);
+  color: var(--vscode-button-foreground, #fff);
+}
+.btn-primary:hover {
+  background: var(--vscode-button-hoverBackground, #1177bb);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--vscode-textLink-foreground, #4daafc);
+  border: 1px solid var(--vscode-textLink-foreground, #4daafc);
+}
+
+.btn-cancel {
+  background: transparent;
+  color: var(--vscode-foreground, #ccc);
+  border: 1px solid var(--vscode-panel-border, #555);
+}
+
+/* ── リンク ────────────────────────────────────── */
+
+a {
+  color: var(--vscode-textLink-foreground, #4daafc);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* ── インラインコード ──────────────────────────── */
+
+code {
+  background: var(--vscode-textCodeBlock-background, #2d2d2d);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.9em;
+}
