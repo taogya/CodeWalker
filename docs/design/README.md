@@ -63,7 +63,7 @@ VSIX として確認する場合は次を使います。
 
 ```bash
 npx @vscode/vsce package
-code --install-extension code-walker-*.vsix
+code --install-extension taogya-codewalker-*.vsix
 ```
 
 検証コマンドは次の通りです。

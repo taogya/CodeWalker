@@ -1,6 +1,6 @@
 {
-  "name": "code-walker",
-  "displayName": "CodeWalker",
+  "name": "taogya-codewalker",
+  "displayName": "CodeWalker - Interactive Code Walkthroughs",
   "description": "Interactive code walk-through with drill-down exploration in VS Code Agent Mode",
   "version": "1.0.0",
   "publisher": "Taogya",

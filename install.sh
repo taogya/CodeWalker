@@ -8,4 +8,4 @@ npm run compile
 npx @vscode/vsce package
 
 # VS Code にインストール
-code --install-extension code-walker-*.vsix
+code --install-extension taogya-codewalker-*.vsix
